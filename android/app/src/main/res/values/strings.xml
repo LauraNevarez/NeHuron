@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">NeurOnApp</string>
+	    <string name="accessibility_service_description">NeurOn detecta qué app está en primer plano para bloquear apps de distracción durante el Modo Esencial. No lee ni almacena el contenido de tu pantalla.</string>
+
+</resources>
