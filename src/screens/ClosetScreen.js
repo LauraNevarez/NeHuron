@@ -45,7 +45,7 @@ export default function ClosetScreen() {
     const equipped = equippedHat === item.id || equippedGlasses === item.id;
     return (
       <Pressable style={[styles.item, equipped && styles.itemOn]} onPress={() => onPressItem(item)}>
-        <Image source={item.image} style={styles.itemImg} resizeMode="contain" />
+        <Image source={item.image} style={styles.itemImg} resizeMode="contain" fadeDuration={0} />
         <Text style={styles.itemName}>{item.name}</Text>
         {equipped ? (
           <Text style={[styles.tag, {color: colors.success}]}>Equipado</Text>
@@ -83,13 +83,16 @@ export default function ClosetScreen() {
       </View>
 
       <FlatList
-        data={data}
-        numColumns={3}
-        keyExtractor={i => i.id}
-        renderItem={renderItem}
-        contentContainerStyle={{padding: 12}}
-        columnWrapperStyle={{justifyContent: 'flex-start'}}
-      />
+          data={data}
+          numColumns={3}
+          keyExtractor={i => i.id}
+          renderItem={renderItem}
+          initialNumToRender={12}
+          maxToRenderPerBatch={12}
+          windowSize={7}
+          removeClippedSubviews={false}
+          contentContainerStyle={{padding: 12}}
+        />
     </SafeAreaView>
   );
 }
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
   itemOn: {borderColor: colors.success},
-  itemImg: {width: 70, height: 70},
+  itemImg: {width: 70, height: 70, backgroundColor: colors.cardAlt, borderRadius: radius.sm},
   itemName: {color: colors.text, fontSize: 12, fontWeight: '600', marginTop: 4},
   tag: {fontSize: 12, fontWeight: '700', marginTop: 2},
 });

@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {colors, radius} from '../theme';
 import {DAY_LABELS} from '../utils/date';
 
-export default function ActivityCard({activity, onPlay, onDelete, highlight}) {
+export default function ActivityCard({activity, onDelete, highlight}) {
   return (
     <View style={[styles.card, highlight && styles.highlight]}>
       <View style={styles.info}>
@@ -25,18 +25,13 @@ export default function ActivityCard({activity, onPlay, onDelete, highlight}) {
           <Text style={styles.evidence}>⏱ {activity.graceMinutes} min de gracia</Text>
         )}
       </View>
-      <View style={styles.actions}>
-        {onPlay && (
-          <Pressable onPress={() => onPlay(activity)} style={styles.play} hitSlop={8}>
-            <Icon name="play" size={26} color="#1A1200" />
-          </Pressable>
-        )}
-        {onDelete && (
-          <Pressable onPress={() => onDelete(activity)} hitSlop={8} style={{marginTop: 10}}>
+      {onDelete && (
+        <View style={styles.actions}>
+          <Pressable onPress={() => onDelete(activity)} hitSlop={8}>
             <Icon name="trash-can-outline" size={22} color={colors.danger} />
           </Pressable>
-        )}
-      </View>
+        </View>
+      )}
     </View>
   );
 }

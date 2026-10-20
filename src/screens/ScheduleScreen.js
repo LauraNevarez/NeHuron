@@ -4,14 +4,12 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ActivityCard from '../components/ActivityCard';
 import useActivityStore from '../store/useActivityStore';
-import useEssentialMode from '../hooks/useEssentialMode';
 import {DAY_LABELS, DAY_NAMES, todayIndex, toMinutes} from '../utils/date';
 import {colors} from '../theme';
 
 export default function ScheduleScreen({navigation}) {
   const activities = useActivityStore(s => s.activities);
   const removeActivity = useActivityStore(s => s.removeActivity);
-  const {isActive, start} = useEssentialMode(navigation);
   const [day, setDay] = useState(todayIndex());
 
   const list = activities
@@ -42,7 +40,7 @@ export default function ScheduleScreen({navigation}) {
         contentContainerStyle={{padding: 16, paddingBottom: 100}}
         ListEmptyComponent={<Text style={styles.empty}>No hay actividades este día.</Text>}
         renderItem={({item}) => (
-          <ActivityCard activity={item} onDelete={confirmDelete} onPlay={() => (isActive ? null : start())} />
+          <ActivityCard activity={item} onDelete={confirmDelete} />
         )}
       />
 

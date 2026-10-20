@@ -7,13 +7,21 @@ import {DEFAULT_BLOCKED_APPS} from '../data/shopItems';
 const initialState = {
   hasOnboarded: false,
   userName: 'Amigo',
-  points: 1200,
+  points: 9999,
   streakDays: 0,
   lastActiveDate: null,
   focusHours: 0,
   focusLog: {}, // { 'YYYY-MM-DD': minutos }
   isEssentialModeActive: false,
   sessionStartedAt: null,
+  // Pomodoro & Meta activa
+  pomodoroPhase: 'focus', // 'focus' | 'break'
+  phaseStartedAt: null,
+  focusMinutes: 25,
+  graceMinutes: 5,
+  pomodoroCycles: 0,
+  activeGoalName: null,
+
   blockedApps: DEFAULT_BLOCKED_APPS.map(a => a.pkg),
   unlockedItems: [],
   equippedGlasses: null,
@@ -36,8 +44,29 @@ const useUserStore = create(
             : [...s.blockedApps, pkg],
         })),
 
-      // ---- Modo Esencial ----
-      startEssentialMode: () => set({isEssentialModeActive: true, sessionStartedAt: Date.now()}),
+      // ---- Modo Esencial con Pomodoro ----
+      startEssentialMode: (focusMin = 25, graceMin = 5, goalName = null) => {
+        const now = Date.now();
+        set({
+          isEssentialModeActive: true,
+          sessionStartedAt: now,
+          pomodoroPhase: 'focus',
+          phaseStartedAt: now,
+          focusMinutes: focusMin,
+          graceMinutes: graceMin,
+          pomodoroCycles: 0,
+          activeGoalName: goalName,
+        });
+      },
+
+      setPomodoroPhase: phase => {
+        const now = Date.now();
+        set(s => ({
+          pomodoroPhase: phase,
+          phaseStartedAt: now,
+          pomodoroCycles: phase === 'break' ? s.pomodoroCycles + 1 : s.pomodoroCycles,
+        }));
+      },
 
       stopEssentialMode: () => {
         const s = get();
@@ -59,21 +88,29 @@ const useUserStore = create(
           lastActiveDate = today;
         }
 
-        const earned = minutes; // 1 punto por minuto enfocado
+        const earned = minutes; // 1 punto por minuto
+        const cycles = s.pomodoroCycles;
+        const goalName = s.activeGoalName;
+
         set({
           isEssentialModeActive: false,
           sessionStartedAt: null,
+          pomodoroPhase: 'focus',
+          phaseStartedAt: null,
+          activeGoalName: null,
+          focusMinutes: 25,  // resetear para que el hint no muestre valor viejo
+          graceMinutes: 5,
+          pomodoroCycles: 0,
           points: s.points + earned,
           focusHours: +(s.focusHours + minutes / 60).toFixed(2),
           focusLog: {...s.focusLog, [today]: (s.focusLog[today] || 0) + minutes},
           streakDays: streak,
           lastActiveDate,
         });
-        return {minutes, points: earned, streak};
+        return {minutes, points: earned, streak, cycles, activeGoalName: goalName};
       },
 
       // ---- Armario ----
-      // Compra (si hace falta) y equipa/desequipa. Devuelve el resultado para la UI.
       purchaseOrToggle: item => {
         const s = get();
         const owned = s.unlockedItems.includes(item.id);

@@ -41,6 +41,29 @@ export const getNextActivity = activities => {
   return today.find(a => toMinutes(a.endTime) > nowMin) || today[0] || null;
 };
 
+export const getGoalDurationMinutes = activity => {
+  if (!activity || !activity.startTime || !activity.endTime) return 25;
+
+  const startM = toMinutes(activity.startTime);
+  const endM = toMinutes(activity.endTime);
+
+  // Log para debug — ver en Metro bundler qué valores llegan
+  console.log(
+    '[NeurOn] getGoalDurationMinutes → startTime:', activity.startTime,
+    '| endTime:', activity.endTime,
+    '| startM:', startM,
+    '| endM:', endM,
+    '| diff:', endM - startM,
+  );
+
+  const fullDiff = endM - startM;
+  if (fullDiff <= 0) return 25; // horario inválido → fallback
+
+  // Siempre usar la duración total de la meta (no los minutos restantes),
+  // para que el temporizador muestre el tiempo completo sin importar la hora actual.
+  return fullDiff;
+};
+
 export const lastNDays = (n = 7) => {
   const out = [];
   for (let i = n - 1; i >= 0; i--) {

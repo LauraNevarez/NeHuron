@@ -5,6 +5,7 @@ import TabNavigator from './TabNavigator';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import PermissionsScreen from '../screens/PermissionsScreen';
 import NewActivityScreen from '../screens/NewActivityScreen';
+import EvidencesScreen from '../screens/EvidencesScreen';
 import useUserStore from '../store/useUserStore';
 import {colors} from '../theme';
 
@@ -26,6 +27,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Permissions" component={PermissionsScreen} />
         <Stack.Screen name="Main" component={TabNavigator} />
+        <Stack.Screen name="Evidences" component={EvidencesScreen} />
         <Stack.Screen
           name="NewActivity"
           component={NewActivityScreen}
