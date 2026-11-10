@@ -4,7 +4,11 @@ import {Platform} from 'react-native';
 // - 10.0.2.2 es el host para el Emulador de Android
 // - 192.168.1.69 es la IP local de tu PC para teléfono físico vía WiFi
 // - localhost para iOS o adb reverse
+// Servidor de producción en la nube (Render 24/7) y fallbacks locales
+const PRODUCTION_HOST = 'https://nehuronapi.onrender.com';
+
 const DEV_HOSTS = [
+  PRODUCTION_HOST,
   'http://192.168.1.69:3000',
   Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000',
   'http://localhost:3000',
@@ -13,9 +17,9 @@ const DEV_HOSTS = [
 let activeBaseUrl = DEV_HOSTS[0];
 
 /**
- * Realiza una petición con timeout rápido
+ * Realiza una petición con timeout (adecuado para servidores cloud como Render)
  */
-async function fetchWithTimeout(url, options = {}, timeoutMs = 2500) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
