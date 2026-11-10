@@ -22,40 +22,56 @@ app.use((req, res, next) => {
 // Rutas
 app.use('/api/auth', authRoutes);
 
-app.get('/api/health', (req, res) => {
+app.get('/', (req, res) => {
   res.json({
     ok: true,
-    service: 'NeurOn API',
-    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    message: '🚀 API de NehurOn funcionando correctamente en la nube',
+    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'connecting',
     timestamp: new Date().toISOString(),
   });
 });
 
-// Conexión a MongoDB Atlas
-async function startServer() {
-  try {
-    console.log('⏳ Conectando a MongoDB Atlas...');
-    await mongoose.connect(MONGO_URI);
-    console.log('✅ Conectado exitosamente a MongoDB Atlas (Base de datos: neuron)');
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    service: 'NeurOn API',
+    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'connecting',
+    timestamp: new Date().toISOString(),
+  });
+});
 
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Servidor NeurOn escuchando en el puerto ${PORT}`);
-      console.log(`👉 Endpoint Auth: http://localhost:${PORT}/api/auth/login`);
-    });
+// Iniciar servidor HTTP de inmediato para que Render detecte el puerto abierto
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor NeurOn escuchando en el puerto ${PORT}`);
+  connectMongoWithRetry();
+});
 
-    server.on('error', err => {
-      if (err.code === 'EADDRINUSE') {
-        console.error(`⚠️ El puerto ${PORT} ya está en uso por otro proceso.`);
-        console.error(`👉 Puedes liberarlo ejecutando: npx kill-port ${PORT}`);
-      } else {
-        console.error('❌ Error en el servidor:', err.message);
-      }
-      process.exit(1);
-    });
-  } catch (error) {
-    console.error('❌ Error conectando a MongoDB Atlas:', error.message);
-    process.exit(1);
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`⚠️ El puerto ${PORT} ya está en uso.`);
+  } else {
+    console.error('❌ Error en el servidor:', err.message);
   }
-}
+});
 
-startServer();
+// Conexión resiliente a MongoDB Atlas con reintentos
+function connectMongoWithRetry(retries = 5, delayMs = 5000) {
+  if (!MONGO_URI) {
+    console.error('⚠️ MONGO_URI no está definida en las variables de entorno.');
+    return;
+  }
+
+  console.log('⏳ Conectando a MongoDB Atlas...');
+  mongoose
+    .connect(MONGO_URI)
+    .then(() => {
+      console.log('✅ Conectado exitosamente a MongoDB Atlas (Base de datos: neuron)');
+    })
+    .catch(err => {
+      console.error('❌ Error conectando a MongoDB Atlas:', err.message);
+      if (retries > 0) {
+        console.log(`⏳ Reintentando conexión en ${delayMs / 1000}s... (${retries} intentos restantes)`);
+        setTimeout(() => connectMongoWithRetry(retries - 1, delayMs), delayMs);
+      }
+    });
+}
