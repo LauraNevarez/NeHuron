@@ -174,6 +174,9 @@ class BlockerModule(private val ctx: ReactApplicationContext) : ReactContextBase
             .putBoolean(KEY_ACTIVE, true)
             .putLong(KEY_BREAK_UNTIL, 0L)
             .commit()
+        runCatching {
+            FocusForegroundService.startService(ctx)
+        }
         promise.resolve(ok)
     }
 
@@ -183,6 +186,9 @@ class BlockerModule(private val ctx: ReactApplicationContext) : ReactContextBase
             .putBoolean(KEY_ACTIVE, false)
             .putLong(KEY_BREAK_UNTIL, 0L)
             .commit()
+        runCatching {
+            FocusForegroundService.stopService(ctx)
+        }
         promise.resolve(ok)
     }
 
@@ -190,7 +196,7 @@ class BlockerModule(private val ctx: ReactApplicationContext) : ReactContextBase
     fun setGraceBreak(minutes: Double, promise: Promise) {
         val until = System.currentTimeMillis() + (minutes * 60 * 1000).toLong()
         val ok = prefs.edit()
-            .putBoolean(KEY_ACTIVE, false)
+            .putBoolean(KEY_ACTIVE, true)
             .putLong(KEY_BREAK_UNTIL, until)
             .commit()
         promise.resolve(ok)
@@ -202,6 +208,9 @@ class BlockerModule(private val ctx: ReactApplicationContext) : ReactContextBase
             .putBoolean(KEY_ACTIVE, true)
             .putLong(KEY_BREAK_UNTIL, 0L)
             .commit()
+        runCatching {
+            FocusForegroundService.startService(ctx)
+        }
         promise.resolve(ok)
     }
 }

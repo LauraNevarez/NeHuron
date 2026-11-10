@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <title>NehurOn</title>
+  <g id="Layer_6" data-name="Layer 6">
+    <path d="M224.692 409.581 C224.541 407.313 226.769 405.317 229.669 405.123 C232.569 404.929 235.043 406.611 235.195 408.88 C235.346 411.148 233.118 413.144 230.218 413.338 C227.318 413.532 224.844 411.85 224.692 409.581 Z" fill="#ffe61c" stroke="#ffe61c" stroke-width="10" stroke-miterlimit="10"/>
+    <path d="M225.377 441.938 C224.52 429.102 227.25 418.468 231.474 418.186 C235.699 417.904 239.819 428.08 240.676 440.916 C241.534 453.752 238.804 464.386 234.579 464.668 C230.354 464.95 226.234 454.773 225.377 441.938 Z" fill="#ffe61c" stroke="#ffe61c" stroke-width="10" stroke-miterlimit="10"/>
+    <path d="M223.634 225.345 L227.91 407.817" fill="#ffe61c" stroke="#ffe61c" stroke-width="10" stroke-miterlimit="10"/>
+    <path d="M706.692 252.137 L705.712 387.199 C705.712 387.199 514.093 598.343 270.929 401.931 C270.489 401.576 270.282 400.91 270.383 400.177 C272.071 388.005 270.378 272.939 270.378 272.939 Z" fill="#005795" stroke="#1a1a1a" stroke-width="10" stroke-miterlimit="10"/>
+    <path d="M111.827 192.573 L473.177 13.961 C473.177 13.961 824.192 178.958 826.827 177.83 C829.462 176.702 490.777 364.878 490.777 364.878 Z" fill="#005795" stroke="#1a1a1a" stroke-width="10" stroke-miterlimit="10"/>
+    <text transform="matrix(1 0 0 1 389.125 430.755)" x="0" y="0" xml:space="preserve" font-family="&apos;Source Sans 3&apos;" font-size="50" font-weight="bold" fill="#ffe61c"><tspan x="0" y="0">NehurOn </tspan></text>
+  </g>
+</svg>

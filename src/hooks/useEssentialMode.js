@@ -9,10 +9,17 @@ export default function useEssentialMode(navigation) {
   const phaseStartedAt = useUserStore(s => s.phaseStartedAt);
   const focusMinutes = useUserStore(s => s.focusMinutes);
   const graceMinutes = useUserStore(s => s.graceMinutes);
+  const totalDurationMinutes = useUserStore(s => s.totalDurationMinutes);
+  const completedFocusMinutes = useUserStore(s => s.completedFocusMinutes);
   const pomodoroCycles = useUserStore(s => s.pomodoroCycles);
   const activeGoalName = useUserStore(s => s.activeGoalName);
 
-  const start = useCallback(async (focusMin = 25, graceMin = 5, goalName = null) => {
+  /**
+   * Inicia el modo esencial para una meta o enfoque libre.
+   * durationMin: minutos totales de la meta.
+   * goalName: nombre de la meta (o null para enfoque libre).
+   */
+  const start = useCallback(async (durationMin = 25, goalName = null) => {
     const ok = await BlockerNative.hasAllPermissions();
     if (!ok) {
       Alert.alert(
@@ -29,40 +36,56 @@ export default function useEssentialMode(navigation) {
     await BlockerNative.setBlockedPackages(blockedApps);
     await BlockerNative.endGraceBreak();
     await BlockerNative.startBlocking();
-    startEssentialMode(focusMin, graceMin, goalName);
+    startEssentialMode(durationMin, goalName);
   }, [navigation]);
 
-  const stop = useCallback(async () => {
+  /**
+   * Termina la sesión (sea por tiempo completado o por botón manual).
+   * Si la meta finalizó o fue cancelada, desbloquea las apps y solicita evidencias si aplica.
+   */
+  const stop = useCallback(async (isAutoCompleted = false) => {
     await BlockerNative.stopBlocking();
-    const res = useUserStore.getState().stopEssentialMode();
-    const cycleText = res.cycles > 0 ? ` · ${res.cycles} Pomodoros` : '';
-    const pointsMsg = res.minutes >= 1
-      ? `Enfocado ${res.minutes} min${cycleText} · +${res.points} puntos · Racha: ${res.streak} días`
-      : 'La sesión fue muy corta para ganar puntos.';
+    const res = useUserStore.getState().stopEssentialMode(isAutoCompleted);
+
+    const title = res.fullyCompleted ? '🎉 ¡Sesión completada!' : 'Sesión terminada';
+    let rewardText = '';
+    if (res.givesReward) {
+      rewardText = `+${res.points} puntos ganados · Racha: ${res.streak} días`;
+    } else {
+      rewardText = res.minutes >= 1
+        ? `Duración: ${res.minutes} min (se requieren al menos 20 min de enfoque para ganar puntos).`
+        : 'Sesión terminada antes de tiempo (sin puntos de recompensa).';
+    }
 
     if (res.activeGoalName && navigation) {
       Alert.alert(
-        '¡Meta completada!',
-        `${pointsMsg}\n\n¿Deseas guardar una foto de tus apuntes en la carpeta de "${res.activeGoalName}"?`,
+        title,
+        `${rewardText}\n\n¿Deseas guardar una evidencia de lo que avanzaste en "${res.activeGoalName}"?`,
         [
           {text: 'Más tarde', style: 'cancel'},
           {
             text: 'Subir evidencia',
-            onPress: () => navigation.navigate('Evidences'),
+            onPress: () => navigation.navigate('Evidences', {autoPickForGoal: res.activeGoalName}),
           },
         ],
       );
     } else {
-      Alert.alert('Sesión terminada', pointsMsg);
+      Alert.alert(title, rewardText);
     }
   }, [navigation]);
 
+  /** Inicia el descanso de gracia */
   const startGraceBreak = useCallback(async (minutes = 5) => {
+    if (minutes <= 0) {
+      // Si no tiene descanso, no entra en break
+      return;
+    }
     const {setPomodoroPhase} = useUserStore.getState();
     await BlockerNative.setGraceBreak(minutes);
     setPomodoroPhase('break');
   }, []);
 
+  /** Termina el descanso y vuelve al siguiente ciclo de enfoque */
   const resumeFocus = useCallback(async () => {
     const {blockedApps, setPomodoroPhase} = useUserStore.getState();
     await BlockerNative.setBlockedPackages(blockedApps);
@@ -71,20 +94,18 @@ export default function useEssentialMode(navigation) {
     setPomodoroPhase('focus');
   }, []);
 
-  const toggle = useCallback((fMin = 25, gMin = 5, gName = null) =>
-    (isActive ? stop() : start(fMin, gMin, gName)), [isActive, start, stop]);
-
   return {
     isActive,
     pomodoroPhase,
     phaseStartedAt,
     focusMinutes,
     graceMinutes,
+    totalDurationMinutes,
+    completedFocusMinutes,
     pomodoroCycles,
     activeGoalName,
     start,
     stop,
-    toggle,
     startGraceBreak,
     resumeFocus,
   };

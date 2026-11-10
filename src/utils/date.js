@@ -28,40 +28,57 @@ export const fromHHMM = str => {
 };
 
 export const toMinutes = str => {
+  if (!str || typeof str !== 'string') return 0;
   const [h, m] = str.split(':').map(Number);
-  return h * 60 + m;
+  return (h || 0) * 60 + (m || 0);
 };
 
-export const getNextActivity = activities => {
-  const now = new Date();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  const today = (activities || [])
-    .filter(a => a.days.includes(todayIndex()))
-    .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime));
-  return today.find(a => toMinutes(a.endTime) > nowMin) || today[0] || null;
-};
-
+/** Devuelve la duración en minutos de una actividad (usa durationMinutes si existe, o calcula diff si es formato viejo). */
 export const getGoalDurationMinutes = activity => {
-  if (!activity || !activity.startTime || !activity.endTime) return 25;
+  if (!activity) return 25;
+  if (activity.durationMinutes && activity.durationMinutes > 0) {
+    return activity.durationMinutes;
+  }
+  if (activity.startTime && activity.endTime) {
+    const diff = toMinutes(activity.endTime) - toMinutes(activity.startTime);
+    return diff > 0 ? diff : 25;
+  }
+  return 25;
+};
 
-  const startM = toMinutes(activity.startTime);
-  const endM = toMinutes(activity.endTime);
+/**
+ * Reglas de descanso:
+ * - Menos de 20 min: 0 min (sin descanso)
+ * - De 20 a 60 min: 5 min de descanso
+ * - Más de 60 min: 10 min de descanso
+ */
+export const getBreakMinutes = totalDuration => {
+  if (totalDuration < 20) return 0;
+  if (totalDuration <= 60) return 5;
+  return 10;
+};
 
-  // Log para debug — ver en Metro bundler qué valores llegan
-  console.log(
-    '[NeurOn] getGoalDurationMinutes → startTime:', activity.startTime,
-    '| endTime:', activity.endTime,
-    '| startM:', startM,
-    '| endM:', endM,
-    '| diff:', endM - startM,
-  );
+/**
+ * Solo se otorga recompensa si la meta duró 20 mins o más.
+ */
+export const sessionGivesReward = totalDuration => totalDuration >= 20;
 
-  const fullDiff = endM - startM;
-  if (fullDiff <= 0) return 25; // horario inválido → fallback
+/**
+ * Duración de cada ciclo de enfoque:
+ * Si es más de 25 min, se divide en bloques de 25 min.
+ */
+export const getFocusCycleLength = totalDuration => Math.min(25, totalDuration);
 
-  // Siempre usar la duración total de la meta (no los minutos restantes),
-  // para que el temporizador muestre el tiempo completo sin importar la hora actual.
-  return fullDiff;
+/** Número total de ciclos para completar la sesión */
+export const getTotalCycles = totalDuration => Math.max(1, Math.ceil(totalDuration / 25));
+
+/** Retorna la primera meta programada para hoy */
+export const getNextActivity = activities => {
+  const todayIdx = todayIndex();
+  const today = (activities || [])
+    .filter(a => a.days && a.days.includes(todayIdx))
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  return today[0] || null;
 };
 
 export const lastNDays = (n = 7) => {

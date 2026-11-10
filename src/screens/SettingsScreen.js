@@ -12,6 +12,8 @@ import {DEFAULT_BLOCKED_APPS} from '../data/shopItems';
 import {colors, radius} from '../theme';
 
 export default function SettingsScreen({navigation}) {
+  const userEmail = useUserStore(s => s.userEmail);
+  const logout = useUserStore(s => s.logout);
   const userName = useUserStore(s => s.userName);
   const setUserName = useUserStore(s => s.setUserName);
   const equippedHat = useUserStore(s => s.equippedHat);
@@ -35,6 +37,20 @@ export default function SettingsScreen({navigation}) {
       (async () => setPerms({a: await BlockerNative.isAccessibilityEnabled(), o: await BlockerNative.isOverlayEnabled()}))();
     }, []),
   );
+
+  const handleLogout = () => {
+    Alert.alert('Cerrar sesión', '¿Deseas cerrar tu sesión actual?', [
+      {text: 'Cancelar', style: 'cancel'},
+      {
+        text: 'Cerrar sesión',
+        style: 'destructive',
+        onPress: () => {
+          logout();
+          navigation.reset({index: 0, routes: [{name: 'Login'}]});
+        },
+      },
+    ]);
+  };
 
   const reset = () =>
     Alert.alert('Borrar todo', 'Se eliminarán puntos, accesorios y actividades.', [
@@ -101,7 +117,16 @@ export default function SettingsScreen({navigation}) {
           ))}
         </View>
 
-        <CustomButton title="Borrar todos los datos" icon="delete-outline" variant="danger" onPress={reset} style={{marginTop: 24}} />
+        {/* Botones de cuenta */}
+        <CustomButton
+          title="Cerrar sesión"
+          icon="logout"
+          variant="ghost"
+          onPress={handleLogout}
+          style={{marginTop: 18}}
+        />
+
+        <CustomButton title="Borrar todos los datos" icon="delete-outline" variant="danger" onPress={reset} style={{marginTop: 10}} />
       </ScrollView>
     </SafeAreaView>
   );

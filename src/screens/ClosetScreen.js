@@ -1,10 +1,12 @@
 import React, {useState} from 'react';
-import {View, Text, Pressable, FlatList, Image, Alert, StyleSheet} from 'react-native';
+import {View, Text, Pressable, FlatList, Alert, StyleSheet} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {SvgXml} from 'react-native-svg';
 import AvatarView from '../components/AvatarView';
 import useUserStore from '../store/useUserStore';
 import {SHOP_ITEMS} from '../data/shopItems';
+import {ACCESSORY_SVGS} from '../assets/mascota/accessories';
 import {colors, radius} from '../theme';
 
 const TABS = [
@@ -43,10 +45,18 @@ export default function ClosetScreen() {
   const renderItem = ({item}) => {
     const owned = unlockedItems.includes(item.id);
     const equipped = equippedHat === item.id || equippedGlasses === item.id;
+    const svgXml = item.svgXml || ACCESSORY_SVGS[item.id];
+
     return (
       <Pressable style={[styles.item, equipped && styles.itemOn]} onPress={() => onPressItem(item)}>
-        <Image source={item.image} style={styles.itemImg} resizeMode="contain" fadeDuration={0} />
-        <Text style={styles.itemName}>{item.name}</Text>
+        <View style={styles.itemImgBox}>
+          {svgXml ? (
+            <SvgXml xml={svgXml} width={64} height={64} />
+          ) : (
+            <Icon name="tag" size={32} color={colors.muted} />
+          )}
+        </View>
+        <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
         {equipped ? (
           <Text style={[styles.tag, {color: colors.success}]}>Equipado</Text>
         ) : owned ? (
@@ -83,16 +93,16 @@ export default function ClosetScreen() {
       </View>
 
       <FlatList
-          data={data}
-          numColumns={3}
-          keyExtractor={i => i.id}
-          renderItem={renderItem}
-          initialNumToRender={12}
-          maxToRenderPerBatch={12}
-          windowSize={7}
-          removeClippedSubviews={false}
-          contentContainerStyle={{padding: 12}}
-        />
+        data={data}
+        numColumns={3}
+        keyExtractor={i => i.id}
+        renderItem={renderItem}
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        removeClippedSubviews={false}
+        contentContainerStyle={{padding: 12}}
+      />
     </SafeAreaView>
   );
 }
@@ -113,7 +123,10 @@ const styles = StyleSheet.create({
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
   itemOn: {borderColor: colors.success},
-  itemImg: {width: 70, height: 70, backgroundColor: colors.cardAlt, borderRadius: radius.sm},
-  itemName: {color: colors.text, fontSize: 12, fontWeight: '600', marginTop: 4},
+  itemImgBox: {
+    width: 70, height: 70, backgroundColor: colors.cardAlt, borderRadius: radius.sm,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  itemName: {color: colors.text, fontSize: 11, fontWeight: '600', marginTop: 6, textAlign: 'center'},
   tag: {fontSize: 12, fontWeight: '700', marginTop: 2},
 });

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <title>NehurOn</title>
+  <g id="Layer_6" data-name="Layer 6">
+    <path d="M239.168 554.775 C239.168 504.569 281.51 463.869 333.742 463.869 C385.974 463.869 428.316 504.569 428.316 554.775 C428.316 604.981 385.974 645.681 333.742 645.681 C281.51 645.681 239.168 604.981 239.168 554.775 Z" fill="none" stroke="#1a1a1a" stroke-width="27" stroke-miterlimit="10"/>
+    <path d="M621.111 532.839 C621.111 482.633 663.454 441.933 715.686 441.933 C767.918 441.933 810.26 482.633 810.26 532.839 C810.26 583.045 767.918 623.744 715.686 623.744 C663.454 623.744 621.111 583.045 621.111 532.839 Z" fill="none" stroke="#1a1a1a" stroke-width="27" stroke-miterlimit="10"/>
+    <path d="M428.316 538.799 L622.396 535.046" fill="none" stroke="#1a1a1a" stroke-width="27" stroke-miterlimit="10"/>
+  </g>
+</svg>

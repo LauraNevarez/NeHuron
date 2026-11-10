@@ -66,6 +66,12 @@ yarn-error.log
 # testing
 /coverage
 
+# Environment files
+.env
+.env.*
+backend/.env
+backend/node_modules/
+
 # Yarn
 .yarn/*
 !.yarn/patches

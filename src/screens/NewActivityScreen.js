@@ -1,58 +1,83 @@
 import React, {useState} from 'react';
 import {View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from '../components/CustomButton';
 import useActivityStore from '../store/useActivityStore';
-import {DAY_LABELS, toHHMM} from '../utils/date';
+import {DAY_LABELS} from '../utils/date';
 import {colors, radius} from '../theme';
 
-const atTime = (h, m = 0) => {
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d;
-};
+const DURATION_PRESETS = [
+  {label: '15 min', value: 15},
+  {label: '25 min', value: 25},
+  {label: '30 min', value: 30},
+  {label: '60 min', value: 60},
+];
 
 export default function NewActivityScreen({navigation}) {
   const addActivity = useActivityStore(s => s.addActivity);
 
   const [name, setName] = useState('');
-  const [start, setStart] = useState(atTime(9));
-  const [end, setEnd] = useState(atTime(10));
-  const [picker, setPicker] = useState(null); // 'start' | 'end' | null
   const [days, setDays] = useState([]);
   const [evidence, setEvidence] = useState('');
-  const [grace, setGrace] = useState('5');
+  const [durationMinutes, setDurationMinutes] = useState(25);
+  const [customDuration, setCustomDuration] = useState('');
+  const [isCustom, setIsCustom] = useState(false);
 
   const toggleDay = i => setDays(d => (d.includes(i) ? d.filter(x => x !== i) : [...d, i].sort()));
 
-  const onPick = (event, date) => {
-    const which = picker;
-    setPicker(null); // en Android el picker se cierra solo
-    if (event.type !== 'set' || !date) return;
-    which === 'start' ? setStart(date) : setEnd(date);
+  const selectPreset = val => {
+    setIsCustom(false);
+    setCustomDuration('');
+    setDurationMinutes(val);
+  };
+
+  const selectCustom = () => {
+    setIsCustom(true);
+    setDurationMinutes(customDuration ? parseInt(customDuration, 10) || 0 : 0);
+  };
+
+  const onCustomChange = t => {
+    const num = t.replace(/[^0-9]/g, '');
+    setCustomDuration(num);
+    setDurationMinutes(parseInt(num, 10) || 0);
+  };
+
+  // Calcular descanso según reglas exactas
+  const getBreakInfo = mins => {
+    if (mins < 20) return {break: 0, label: 'Sin descanso · Sin recompensa'};
+    if (mins <= 60) return {break: 5, label: '5 min de descanso por ciclo · Con recompensa'};
+    return {break: 10, label: '10 min de descanso por ciclo · Con recompensa'};
+  };
+
+  // Calcular ciclos
+  const getCycleInfo = mins => {
+    if (mins <= 25) return `1 ciclo de ${mins} min`;
+    const cycles = Math.ceil(mins / 25);
+    const lastCycle = mins % 25 || 25;
+    return `${cycles} ciclos (bloques de 25 min${lastCycle !== 25 ? `, último de ${lastCycle} min` : ''})`;
   };
 
   const save = () => {
-    if (!name.trim()) return Alert.alert('Falta el nombre', 'Escribe el nombre de la actividad.');
+    if (!name.trim()) return Alert.alert('Falta el nombre', 'Escribe el nombre de la meta.');
     if (days.length === 0) return Alert.alert('Falta el día', 'Selecciona al menos un día.');
-    if (toHHMM(end) <= toHHMM(start)) return Alert.alert('Horario inválido', 'La hora fin debe ser posterior al inicio.');
+    if (!durationMinutes || durationMinutes < 1) return Alert.alert('Duración inválida', 'Elige o escribe una duración de al menos 1 minuto.');
 
     addActivity({
       id: Date.now().toString(),
       name: name.trim(),
-      startTime: toHHMM(start),
-      endTime: toHHMM(end),
+      durationMinutes,
       days,
       evidence: evidence.trim(),
-      graceMinutes: Math.max(0, parseInt(grace, 10) || 0),
       createdAt: Date.now(),
     });
     navigation.goBack();
   };
 
+  const breakInfo = getBreakInfo(durationMinutes);
+  const cycleInfo = durationMinutes >= 1 ? getCycleInfo(durationMinutes) : '';
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{padding: 16}} keyboardShouldPersistTaps="handled">
-      <Text style={styles.label}>Nombre de la actividad</Text>
+      <Text style={styles.label}>Nombre de la meta</Text>
       <TextInput
         style={styles.input}
         value={name}
@@ -61,26 +86,45 @@ export default function NewActivityScreen({navigation}) {
         placeholderTextColor={colors.muted}
       />
 
-      <Text style={styles.label}>Horario</Text>
-      <View style={styles.row}>
-        <Pressable style={[styles.input, styles.timeBox]} onPress={() => setPicker('start')}>
-          <Text style={styles.timeLabel}>Inicio</Text>
-          <Text style={styles.time}>{toHHMM(start)}</Text>
-        </Pressable>
-        <View style={{width: 12}} />
-        <Pressable style={[styles.input, styles.timeBox]} onPress={() => setPicker('end')}>
-          <Text style={styles.timeLabel}>Fin</Text>
-          <Text style={styles.time}>{toHHMM(end)}</Text>
+      <Text style={styles.label}>Duración</Text>
+      <View style={styles.presetRow}>
+        {DURATION_PRESETS.map(p => (
+          <Pressable
+            key={p.value}
+            style={[styles.chip, !isCustom && durationMinutes === p.value && styles.chipOn]}
+            onPress={() => selectPreset(p.value)}>
+            <Text style={[styles.chipText, !isCustom && durationMinutes === p.value && styles.chipTextOn]}>
+              {p.label}
+            </Text>
+          </Pressable>
+        ))}
+        <Pressable
+          style={[styles.chip, isCustom && styles.chipOn]}
+          onPress={selectCustom}>
+          <Text style={[styles.chipText, isCustom && styles.chipTextOn]}>Personalizar</Text>
         </Pressable>
       </View>
-      {picker && (
-        <DateTimePicker
-          value={picker === 'start' ? start : end}
-          mode="time"
-          is24Hour
-          display="default"
-          onChange={onPick}
-        />
+
+      {isCustom && (
+        <View style={styles.customRow}>
+          <TextInput
+            style={[styles.input, styles.customInput]}
+            value={customDuration}
+            onChangeText={onCustomChange}
+            keyboardType="number-pad"
+            placeholder="Ej. 45"
+            placeholderTextColor={colors.muted}
+            autoFocus
+          />
+          <Text style={styles.customLabel}>minutos</Text>
+        </View>
+      )}
+
+      {durationMinutes >= 1 && (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}> {cycleInfo}</Text>
+          <Text style={styles.infoText}> {breakInfo.label}</Text>
+        </View>
       )}
 
       <Text style={styles.label}>Días</Text>
@@ -92,27 +136,17 @@ export default function NewActivityScreen({navigation}) {
         ))}
       </View>
 
-      <Text style={styles.label}>Descripción de la evidencia</Text>
+      <Text style={styles.label}>Descripción de la evidencia (opcional)</Text>
       <TextInput
         style={[styles.input, {height: 90, textAlignVertical: 'top'}]}
         value={evidence}
         onChangeText={setEvidence}
         multiline
-        placeholder="Ej. Foto de mis apuntes terminados"
+        placeholder="Ej. Foto de mis apuntes o ejercicios resueltos"
         placeholderTextColor={colors.muted}
       />
 
-      <Text style={styles.label}>Minutos de gracia</Text>
-      <TextInput
-        style={styles.input}
-        value={grace}
-        onChangeText={t => setGrace(t.replace(/[^0-9]/g, ''))}
-        keyboardType="number-pad"
-        placeholder="5"
-        placeholderTextColor={colors.muted}
-      />
-
-      <CustomButton title="Guardar actividad" icon="content-save" variant="accent" onPress={save} style={{marginTop: 24}} />
+      <CustomButton title="Guardar meta" icon="content-save" variant="accent" onPress={save} style={{marginTop: 24}} />
     </ScrollView>
   );
 }
@@ -125,9 +159,22 @@ const styles = StyleSheet.create({
     fontSize: 16, borderWidth: 1, borderColor: colors.border,
   },
   row: {flexDirection: 'row', justifyContent: 'space-between'},
-  timeBox: {flex: 1},
-  timeLabel: {color: colors.muted, fontSize: 12},
-  time: {color: colors.text, fontSize: 24, fontWeight: '800'},
+  presetRow: {flexDirection: 'row', flexWrap: 'wrap', gap: 8},
+  chip: {
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+  },
+  chipOn: {backgroundColor: colors.accent, borderColor: colors.accent},
+  chipText: {color: colors.muted, fontWeight: '700', fontSize: 14},
+  chipTextOn: {color: '#1A1200'},
+  customRow: {flexDirection: 'row', alignItems: 'center', marginTop: 8},
+  customInput: {flex: 1},
+  customLabel: {color: colors.text, fontSize: 16, fontWeight: '700', marginLeft: 8},
+  infoBox: {
+    backgroundColor: colors.cardAlt, borderRadius: radius.md, padding: 12,
+    marginTop: 10, borderWidth: 1, borderColor: colors.border,
+  },
+  infoText: {color: colors.muted, fontSize: 13, marginTop: 2, fontWeight: '500'},
   dayChip: {
     width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, borderWidth: 1,
     borderColor: colors.border, alignItems: 'center', justifyContent: 'center',

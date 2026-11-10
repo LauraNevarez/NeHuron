@@ -5,24 +5,31 @@ import {colors, radius} from '../theme';
 import {DAY_LABELS} from '../utils/date';
 
 export default function ActivityCard({activity, onDelete, highlight}) {
+  const durationLabel = activity.durationMinutes
+    ? `${activity.durationMinutes} min`
+    : activity.startTime && activity.endTime
+      ? `${activity.startTime} – ${activity.endTime}`
+      : null;
+
   return (
     <View style={[styles.card, highlight && styles.highlight]}>
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>{activity.name}</Text>
-        <View style={styles.row}>
-          <Icon name="clock-outline" size={14} color={colors.muted} />
-          <Text style={styles.meta}> {activity.startTime} – {activity.endTime}</Text>
-        </View>
+        {durationLabel && (
+          <View style={styles.row}>
+            <Icon name="timer-outline" size={14} color={colors.primary} />
+            <Text style={styles.meta}> {durationLabel}</Text>
+          </View>
+        )}
         <View style={styles.daysRow}>
           {DAY_LABELS.map((l, i) => (
-            <Text key={i} style={[styles.day, activity.days.includes(i) && styles.dayOn]}>{l}</Text>
+            <Text key={i} style={[styles.day, activity.days && activity.days.includes(i) && styles.dayOn]}>
+              {l}
+            </Text>
           ))}
         </View>
         {!!activity.evidence && (
           <Text style={styles.evidence} numberOfLines={1}>📎 {activity.evidence}</Text>
-        )}
-        {activity.graceMinutes > 0 && (
-          <Text style={styles.evidence}>⏱ {activity.graceMinutes} min de gracia</Text>
         )}
       </View>
       {onDelete && (
@@ -50,18 +57,10 @@ const styles = StyleSheet.create({
   info: {flex: 1},
   name: {color: colors.text, fontSize: 17, fontWeight: '700', marginBottom: 4},
   row: {flexDirection: 'row', alignItems: 'center'},
-  meta: {color: colors.muted, fontSize: 13},
+  meta: {color: colors.text, fontSize: 13, fontWeight: '600'},
   daysRow: {flexDirection: 'row', marginTop: 8},
   day: {color: colors.muted, fontSize: 12, marginRight: 8, fontWeight: '600'},
-  dayOn: {color: colors.accent},
+  dayOn: {color: colors.accent, fontWeight: '800'},
   evidence: {color: colors.muted, fontSize: 12, marginTop: 4},
   actions: {alignItems: 'center', justifyContent: 'center', marginLeft: 8},
-  play: {
-    backgroundColor: colors.accent,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

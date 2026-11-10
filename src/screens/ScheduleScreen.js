@@ -13,8 +13,11 @@ export default function ScheduleScreen({navigation}) {
   const [day, setDay] = useState(todayIndex());
 
   const list = activities
-    .filter(a => a.days.includes(day))
-    .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime));
+    .filter(a => a.days && a.days.includes(day))
+    .sort((a, b) => {
+      if (a.startTime && b.startTime) return toMinutes(a.startTime) - toMinutes(b.startTime);
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
 
   const confirmDelete = a =>
     Alert.alert('Eliminar', `¿Eliminar "${a.name}"?`, [
